@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memória Logística</title>
+    <style>
+* {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a365d 0%, #2d3748 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: white;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .header p {
+            color: #a0aec0;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat-box {
+            background: linear-gradient(145deg, #2d3748, #1a365d);
+            padding: 20px;
+            border-radius: 10px;
+            flex: 1;
+            min-width: 200px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-box h3 {
+            color: #63b3ed;
+            margin-bottom: 10px;
+        }
+
+        .score {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            aspect-ratio: 3/4;
+            background: #2d3748;
+            border-radius: 10px;
+            cursor: pointer;
+            position: relative;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-front,
+        .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .card-front {
+            background: linear-gradient(145deg, #3182ce, #2c5282);
+        }
+
+        .card-back {
+            background: linear-gradient(145deg, #2d3748, #1a365d);
+            transform: rotateY(180deg);
+        }
+
+        .card-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .card-title {
+            font-size: 0.9em;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        .card-info {
+            font-size: 0.7em;
+            text-align: center;
+            color: #a0aec0;
+        }
+
+        .controls {
+            text-align: center;
+        }
+
+        .btn {
+            background: #3182ce;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background: #2c5282;
+        }
+
+        .current-turn {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .board {
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            }
+
+            .stats {
+                flex-direction: column;
+            }
+
+            .stat-box {
+                width: 100%;
+            }
+        }
+        /* Estilos para o pop-up */
+        .popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 1000;
+        }
+
+        .popup-content {
+            text-align: center;
+            background: #2d3748;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .popup button {
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: #3182ce;
+            border: none;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .popup button:hover {
+            background: #2c5282;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Memória Logística</h1>
+            <p>Teste seus conhecimentos em transportes e operações!</p>
+        </div>
+
+        <div class="current-turn" id="currentTurn">
+            Vez da Equipe Operacional
+        </div>
+
+        <div class="stats">
+            <div class="stat-box">
+                <h3>Equipe Operacional</h3>
+                <div class="score" id="team1Score">0</div>
+            </div>
+            <div class="stat-box">
+                <h3>Timer</h3>
+                <div class="score" id="timer">00:00</div>
+            </div>
+            <div class="stat-box">
+                <h3>Equipe Logística</h3>
+                <div class="score" id="team2Score">0</div>
+            </div>
+        </div>
+
+        <div class="board" id="gameBoard"></div>
+
+        <div class="controls">
+            <button class="btn" id="newGameBtn">Nova Operação</button>
+        </div>
+
+        <!-- Pop-up de vitória -->
+        <div class="popup" id="victoryPopup">
+            <div class="popup-content">
+                <h2 id="winnerText"></h2>
+                <button id="closePopupBtn">Fechar</button>
+            </div>
+        </div>
+    </div>
+    <!-- Continuação do HTML anterior -->
+    <audio id="victorySound" src="./sounds/victory.mp3" preload="auto"></audio>
+    <audio id="errorSound" src="./sounds/error.mp3" preload="auto"></audio>
+    <audio id="matchSound" src="./sounds/match.mp3" preload="auto"></audio>
+
+    <script>
+        const cards = [
+            { id: 'truck', icon: '🚛', title: 'Transporte Rodoviário', info: 'Principal modal para curtas e médias distâncias' },
+            { id: 'ship', icon: '🚢', title: 'Transporte Marítimo', info: 'Ideal para grandes volumes internacionais' },
+            { id: 'plane', icon: '✈️', title: 'Transporte Aéreo', info: 'Rápido para cargas urgentes e alto valor' },
+            { id: 'train', icon: '🚂', title: 'Transporte Ferroviário', info: 'Eficiente para grandes distâncias terrestres' },
+            { id: 'warehouse', icon: '🏭', title: 'Centro de Distribuição', info: 'Hub para armazenamento e distribuição' },
+            { id: 'container', icon: '📦', title: 'Container', info: 'Unidade padrão para transporte multimodal' },
+            { id: 'crane', icon: '🏗️', title: 'Guindaste Portuário', info: 'Essencial para operações portuárias' },
+            { id: 'forklift', icon: '🚜', title: 'Empilhadeira', info: 'Movimentação interna de cargas' }
+        ];
+
+        let gameState = {
+            flippedCards: [],
+            matchedPairs: [],
+            scores: { team1: 0, team2: 0 },
+            currentPlayer: 'team1',
+            timer: 0,
+            timerInterval: null,
+            isLocked: false
+        };
+
+        function shuffleCards() {
+            return [...cards, ...cards]
+                .sort(() => Math.random() - 0.5)
+                .map((card, index) => ({ ...card, index }));
+        }
+
+        function createCard(card) {
+            const cardElement = document.createElement('div');
+            cardElement.className = 'card';
+            cardElement.innerHTML = `
+                <div class="card-front">
+                    🔄
+                </div>
+                <div class="card-back">
+                    <div class="card-icon">${card.icon}</div>
+                    <div class="card-title">${card.title}</div>
+                    <div class="card-info">${card.info}</div>
+                </div>
+            `;
+            cardElement.addEventListener('click', () => handleCardClick(card, cardElement));
+            return cardElement;
+        }
+
+        function handleCardClick(card, cardElement) {
+            if (
+                gameState.isLocked ||
+                gameState.flippedCards.length >= 2 ||
+                gameState.matchedPairs.includes(card.index) ||
+                cardElement.classList.contains('flipped')
+            ) {
+                return;
+            }
+
+            cardElement.classList.add('flipped');
+            gameState.flippedCards.push({ card, element: cardElement });
+
+            if (gameState.flippedCards.length === 2) {
+                checkMatch();
+            }
+        }
+
+        function checkMatch() {
+            const [first, second] = gameState.flippedCards;
+            const isMatch = first.card.id === second.card.id;
+
+            gameState.isLocked = true;
+
+            setTimeout(() => {
+                if (isMatch) {
+                    document.getElementById('matchSound').play();
+                    gameState.scores[gameState.currentPlayer] += 2;
+                    gameState.matchedPairs.push(first.card.index, second.card.index);
+                    updateScores();
+                    checkGameEnd();
+                } else {
+                    document.getElementById('errorSound').play();
+                    first.element.classList.remove('flipped');
+                    second.element.classList.remove('flipped');
+                    gameState.currentPlayer = gameState.currentPlayer === 'team1' ? 'team2' : 'team1';
+                    updateCurrentTurn();
+                }
+
+                gameState.flippedCards = [];
+                gameState.isLocked = false;
+            }, 1000);
+        }
+
+        function updateScores() {
+            document.getElementById('team1Score').textContent = gameState.scores.team1;
+            document.getElementById('team2Score').textContent = gameState.scores.team2;
+        }
+
+        function updateCurrentTurn() {
+            const turnText = gameState.currentPlayer === 'team1' ? 'Equipe Operacional' : 'Equipe Logística';
+            document.getElementById('currentTurn').textContent = `Vez da ${turnText}`;
+        }
+
+        function updateTimer() {
+            const minutes = Math.floor(gameState.timer / 60);
+            const seconds = gameState.timer % 60;
+            document.getElementById('timer').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function checkGameEnd() {
+            if (gameState.matchedPairs.length === cards.length * 2) {
+                clearInterval(gameState.timerInterval);
+                const winner = gameState.scores.team1 > gameState.scores.team2 ? 'Equipe Operacional' : 'Equipe Logística';
+                document.getElementById('winnerText').textContent = `Vitória da ${winner}!`;
+                document.getElementById('victoryPopup').style.display = 'flex';
+                document.getElementById('victorySound').play();
+            }
+        }
+
+        function initializeGame() {
+            const board = document.getElementById('gameBoard');
+            board.innerHTML = '';
+            
+            gameState = {
+                flippedCards: [],
+                matchedPairs: [],
+                scores: { team1: 0, team2: 0 },
+                currentPlayer: 'team1',
+                timer: 0,
+                timerInterval: null,
+                isLocked: false
+            };
+
+            const shuffledCards = shuffleCards();
+            shuffledCards.forEach(card => {
+                board.appendChild(createCard(card));
+            });
+
+            updateScores();
+            updateCurrentTurn();
+
+            clearInterval(gameState.timerInterval);
+            gameState.timer = 0;
+            updateTimer();
+            gameState.timerInterval = setInterval(() => {
+                gameState.timer++;
+                updateTimer();
+            }, 1000);
+        }
+
+        document.getElementById('newGameBtn').addEventListener('click', initializeGame);
+        document.getElementById('closePopupBtn').addEventListener('click', () => {
+            document.getElementById('victoryPopup').style.display = 'none';
+            initializeGame();
+        });
+
+        // Inicializar o jogo quando a página carregar
+        initializeGame();
+    </script>
+</body>
+</html>
